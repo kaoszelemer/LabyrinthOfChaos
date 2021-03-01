@@ -1,13 +1,20 @@
 Camera = require("lib.humpcamera")
 mainMap = require("map2")
+signTable = require("signs")
+nextSign = 0
+gameStart = true
+
 love.graphics.setDefaultFilter( 'nearest', 'nearest' )
 width= 800
 height= 800
 
 white = {1,1,1}
 black = {0,0,0}
+red = {1, 0, 0}
+yellow = {1,1, 0}
 
 font = love.graphics.newFont(8)
+bigFont = love.graphics.newFont(32)
 
 tileSetAtlas = love.graphics.newImage("tileset.png")
 player = {}
@@ -50,11 +57,13 @@ local function testMapForCollision(x, y)
 end
 
 local function testMapForUse(x, y)
+	if (player.y / 8 + y > 0 and player.y / 8 + y <= 100) and (player.x / 8 + x > 0 and player.x / 8 + x <= 100) then
 
-	if mainMap[(player.y / 8) + y][(player.x / 8) + x] == 5 then
+		if mainMap[(player.y / 8) + y][(player.x / 8) + x] == 5 then
 		return true
+		end
+		return false
 	end
-	return false
 end
 
 
@@ -89,6 +98,9 @@ function love.draw()
     love.graphics.draw(tileSetAtlas, player.quad, player.actx, player.acty)
 
 	
+		
+
+	
     for x = 1, #mainMap do
 		for y = 1, #mainMap[x] do
 
@@ -111,13 +123,24 @@ function love.draw()
 		end
 	end
 
-	if drawSign then
-
-		love.graphics.setColor(black)
-		love.graphics.rectangle("fill", player.x - tileW * 2, player.y - tileH * 2, tileW * 15, tileH)
+	if gameStart then
+		love.graphics.setColor(red)
+		love.graphics.rectangle("fill", player.x - tileW * 2, player.y - tileH * 2, tileW * 8, tileH)
 		love.graphics.setColor(white)
 		love.graphics.setFont(font)
-		love.graphics.print("Hello adventurer", player.x - tileW * 2, player.y - tileH * 2)
+		love.graphics.print("FIND ALL SIGNS", player.x - tileW * 2, player.y - tileH * 2) 
+	end
+
+	for i = 1, #signTable do
+		if signTable[i].drawSign then
+			
+				love.graphics.setColor(red)
+				love.graphics.rectangle("fill", player.x - tileW * 2, player.y - tileH * 2, tileW * 8, tileH)
+				love.graphics.setColor(white)
+				love.graphics.setFont(font)
+				love.graphics.print(signTable[i], player.x - tileW * 2, player.y - tileH * 2)
+			
+		end
 	end
 
 	if drawCantDo then
@@ -128,6 +151,13 @@ function love.draw()
 		love.graphics.print("nothing to use here", player.x - tileW * 2, player.y - tileH * 2) 
 	end
 
+	love.graphics.setColor(black)
+	love.graphics.rectangle("fill", player.x + 5 * tileW, player.y + 5 * tileW, tileW * 5, tileH)
+	love.graphics.setColor(white)
+	love.graphics.setFont(font)
+	love.graphics.print("22/"..#signTable, player.x + 5 * tileW, player.y + 5 * tileW)
+
+
 	camera:detach()
 end
 
@@ -137,43 +167,85 @@ function love.keypressed(key)
 		
 	if key == "a" then
 		if testMapForUse(0, -1) or testMapForUse(0, 1) or testMapForUse(-1, 0) or testMapForUse(1, 0) then
-			drawSign = true
-			
-		else
-			drawCantDo = true
-			
-		end
-
+			for k,sign in ipairs(signTable) do
+				for i = 1, #sign do
+				print(sign[i].x)
+					if player.x == sign.x - 1 or player.x == sign.x + 1 or player.y == sign.y - 1 or player.y == sign.y + 1 then
+						
+						sign.drawSign = true
+					end
+				end
+			end
+		
 	end
+			
+			
+			
+	else
+		drawCantDo = true
+		
+	end
+
+
 
 
 	if key == ("up") then
-		drawSign = false
-		drawCantDo = false
-		if testMapForCollision(0, -1) then 
-		  player.y = player.y - tileW
+		for k,sign in ipairs(signTable) do
+			for i = 1, #sign do
+
+			sign[i].drawSign = false
+			end
 		end
+			drawCantDo = false
+			gameStart = false
+			if testMapForCollision(0, -1) then 
+			player.y = player.y - tileW
+			end
 	end
 
 	if key == ("down") then
-		drawSign = false
+		for k,sign in ipairs(signTable) do
+			for i = 1, #sign do
+
+					sign[i].drawSign = false
+			end
+		end
+	
 		drawCantDo = false
+		gameStart = false
+	
 		if testMapForCollision(0, 1) then
 			player.y = player.y + tileH
 		end
 	end
 
 	if key == ("left") then
-		drawSign = false
+		for k,sign in ipairs(signTable) do
+			for i = 1, #sign do
+
+			sign[i].drawSign = false
+			end
+		end
+	
 		drawCantDo = false
+		gameStart = false
+
 		if testMapForCollision(-1,0) then
 			player.x = player.x - tileW
 		end
 	end
 
 	if key == ("right") then
-		drawSign = false
+		for k,sign in ipairs(signTable) do
+			for i = 1, #sign do
+
+			sign[i].drawSign = false
+			end
+		end
+	
 		drawCantDo = false
+		gameStart = false
+
 		if testMapForCollision(1,0) then
 			player.x = player.x + tileH
 		end
